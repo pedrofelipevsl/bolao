@@ -60,17 +60,30 @@ class Selecao(models.Model):
 		return self.nome_da_selecao
 
 class Partida(models.Model):
-	selecao_visitante = models.ForeignKey(Selecao, on_delete=models.CASCADE, related_name='selecaovisitante')
 	selecao_desafiante = models.ForeignKey(Selecao, on_delete=models.CASCADE, related_name='selecaodesafiante')
-	gols_visitante = models.PositiveSmallIntegerField()
-	gols_desafiante = models.PositiveSmallIntegerField()
+	selecao_visitante = models.ForeignKey(Selecao, on_delete=models.CASCADE, related_name='selecaovisitante')
+	gols_desafiante = models.PositiveSmallIntegerField(blank=True, null=True)
+	gols_visitante = models.PositiveSmallIntegerField(blank=True, null=True)
 	estadio = models.CharField(max_length=200)
 	data_hora = models.DateTimeField(auto_now=False, auto_now_add=False)
 
 	def __str__(self):
 		return "%s x %s" % (self.selecao_desafiante, self.selecao_visitante,)
 
+class Bolao(models.Model):
+	nome_do_bolao = models.CharField(max_length=200)
+	partida = models.ForeignKey(Partida, on_delete=models.CASCADE)
+	premiacao = models.FloatField(default=0.0)
+	valor_disputado = models.FloatField(default=0.0)
+
+	#vencedores = models.ForeignKey(Apostador, on_delete=models.CASCADE)
+
+	def __str__(self):
+		return self.nome_do_bolao
+
 class Aposta(models.Model):
+	class Meta:
+		unique_together = (('apostador','bolao'),)
 	apostador = models.ForeignKey(Apostador, on_delete=models.CASCADE)
 	bolao = models.ForeignKey(Bolao, on_delete=models.CASCADE)
 	# A PK é composta de apostador e bolao
@@ -79,20 +92,11 @@ class Aposta(models.Model):
 	valor_da_aposta = models.FloatField(default=5.00)
 
 	def __str__(self):
-		return "%s aposta na partida %s com %f reais" % (self.apostador, self.partida, self.valor_da_aposta)
-
-class Bolao(models.Model):
-	nome_do_bolao = models.CharField(max_length=200)
-	partida = models.ForeignKey(Partida, on_delete=models.CASCADE)
-	premiacao = models.FloatField()
-	valor_disputado = models.FloatField()
-
-	#vencedores = models.ForeignKey(Apostador, on_delete=models.CASCADE)
-
-	def __str__(self):
-		return self.nome_do_bolao
+		return "%s aposta na partida com R$ %.2f reais" % (self.apostador, self.valor_da_aposta)
 
 class ApostadoresVencedoresBolao(models.Model):
+	class Meta:
+		unique_together = (('apostador','bolao'),)
 	apostador = models.ForeignKey(Apostador, on_delete=models.CASCADE)
 	bolao = models.ForeignKey(Bolao, on_delete=models.CASCADE)
 	#A PK é composta de apostador e bolao
